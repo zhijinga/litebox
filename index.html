@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>声屿 · 本地媒体工具</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#242d28;background:#f6f7f2}*{box-sizing:border-box}body{margin:0}header{max-width:1120px;margin:auto;padding:30px 28px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:21px;font-weight:750;letter-spacing:2px}.brand span{color:#568069;margin-right:10px}.badge{font-size:12px;color:#577461;background:#e9eee5;border-radius:30px;padding:9px 14px}main{max-width:760px;margin:58px auto;padding:0 24px}.eyebrow{font-size:11px;letter-spacing:3px;color:#7c8a7e}h1{font-size:48px;letter-spacing:-2px;font-weight:600;margin:18px 0}h1 span{color:#69816a}.intro{color:#7b827a;line-height:1.9;font-size:14px}.card{background:#fff;border:1px solid #e4e8df;border-radius:24px;padding:28px;margin-top:32px;box-shadow:0 16px 50px #233b2410}.drop{display:block;text-align:center;border:1.5px dashed #c6d2c1;background:#fafbf8;border-radius:16px;padding:40px 18px;cursor:pointer;transition:.2s}.drop:hover,.drop.over{background:#edf3e9;border-color:#68876b}.icon{display:inline-grid;place-items:center;background:#eaf0e5;color:#55765a;width:58px;height:58px;border-radius:17px;font-size:28px;margin-bottom:15px}.drop strong{display:block;font-size:16px;font-weight:550;word-break:break-all}.drop small{display:block;color:#93998f;margin-top:10px;font-size:12px}input[type=file]{position:absolute;width:1px;height:1px;opacity:0}.drop:focus-within{outline:2px solid #52765b;outline-offset:4px}.settings{display:flex;justify-content:space-between;align-items:center;margin:25px 0;gap:16px}.label{font-size:13px}.label small{display:block;color:#949a91;font-size:11px;margin-top:6px}select{border:1px solid #dfe5d9;border-radius:9px;background:white;padding:10px;color:#4f6150;font:inherit;font-size:12px}button,.download{display:block;text-align:center;width:100%;border:0;border-radius:11px;padding:15px;background:#486c50;color:white;font:inherit;font-size:14px;cursor:pointer;text-decoration:none}button:hover,.download:hover{background:#36593e}button:disabled{opacity:.45;cursor:default}.note{text-align:center;color:#8c9488;font-size:11px;margin:17px 0 0}.status{font-size:13px;line-height:1.8;margin-top:18px;color:#54715a;white-space:pre-line}.status.error{color:#a85440}.download{margin-top:15px}.features{display:flex;justify-content:space-around;margin:30px 0;color:#8a9285;font-size:11px}video{width:100%;max-height:360px;background:#17221b;border-radius:10px;margin:10px 0 18px}audio{width:100%;margin-top:16px}footer{text-align:center;color:#a3aa9d;font-size:11px;margin:60px 0 24px} [hidden]{display:none!important}@media(max-width:600px){main{margin-top:30px}h1{font-size:36px}.card{padding:18px}.badge{font-size:10px}.features{gap:10px;font-size:10px}}
+
+.tool-tabs{display:flex;gap:6px;padding:5px;background:#e9ede4;border:1px solid #dfe5d9;border-radius:14px;margin:30px 0 0;overflow-x:auto}
+.tool-tabs button{width:auto;flex:0 0 auto;padding:12px 22px;background:transparent;color:#788371;border-radius:10px;font-size:13px;white-space:nowrap}
+.tool-tabs button[aria-selected="true"]{background:#fff;color:#36593e;box-shadow:0 2px 8px #233b2410;font-weight:600}
+.tool-tabs button:hover{background:#f5f7f1;color:#36593e}.tool-tabs button:focus-visible{outline:2px solid #486c50;outline-offset:-2px}
+.tool-tabs+.card,#imageWorkspace{margin-top:14px}
+.image-actions{display:flex;gap:10px;margin-top:20px}.image-actions button:first-child{flex:2}.image-actions button{flex:1}.secondary{background:#eef1e9;color:#53654f}.secondary:hover{background:#e3e9dc}
+.image-list{margin-top:18px}.image-row{display:flex;align-items:center;gap:12px;border-top:1px solid #e9ede4;padding:14px 0;font-size:12px}.image-row img{width:48px;height:48px;object-fit:contain;background:#f0f2ec;border-radius:8px}.image-info{flex:1;min-width:0}.image-name{display:block;overflow-wrap:anywhere;font-weight:550}.image-meta{display:block;color:#848f7e;margin-top:6px;line-height:1.7}.image-row a{color:#486c50;white-space:nowrap}.image-row button{width:auto;padding:7px 9px;font-size:11px;background:#eef1e9;color:#53654f}progress{width:100%;height:8px;margin-top:14px;accent-color:#486c50}
+@media(max-width:600px){.tool-tabs button{padding:12px 16px}}
+</style>
+<header><div class="brand"><span>◒</span>声屿</div><div class="badge">● 100% 本地处理</div></header>
+<main><div class="eyebrow">A LITTLE SPACE FOR SOUND</div><h1>让画面清楚，<span>让声音轻盈。</span></h1><p class="intro">增强视频、提取音频，批量压缩图片。<br>全程本地处理，原文件保持不变。</p>
+<nav class="tool-tabs" role="tablist" aria-label="本地音视频工具"><button type="button" id="tab-enhance" role="tab" aria-selected="true" aria-controls="workspace" data-tool="enhance">视频增强</button><button type="button" id="tab-audio" role="tab" aria-selected="false" aria-controls="workspace" tabindex="-1" data-tool="audio">MP4 转 MP3</button><button type="button" id="tab-image" role="tab" aria-selected="false" aria-controls="imageWorkspace" tabindex="-1" data-tool="image">图片压缩</button></nav>
+<section class="card" id="workspace" role="tabpanel" aria-labelledby="tab-enhance"><label class="drop" id="drop"><input id="file" type="file" accept=".mp4,video/mp4"><div class="icon">♫</div><strong id="filename">拖入视频，或点击选择文件</strong><small id="filemeta">支持 MP4 格式 · 最大 2 GB · 每次一个文件</small></label>
+<div id="audioSettings" class="settings" hidden><div class="label">音频质量<small>根据用途，选择适合的音质</small></div><select id="quality" aria-label="音频质量"><option value="192">192 kbps · 推荐</option><option value="320">320 kbps · 高音质</option><option value="128">128 kbps · 小体积</option></select></div>
+<div id="videoSettings"><div class="settings"><label class="label" for="preset">增强预设</label><select id="preset"><option value="gentle">轻度增强 · 日常视频</option><option value="lowlight">暗光降噪 · 提亮画面</option><option value="animation">动画放大 · 线条增强</option></select></div><div class="settings"><label class="label" for="resolution">输出分辨率</label><select id="resolution"><option value="original">保持原尺寸</option><option value="1080">放大至 1080p</option><option value="2160">放大至 4K</option></select></div><p class="note">基础降噪与锐化，非 AI 修复；放大不会恢复已丢失的细节。<br>竖屏保持竖屏比例，较大视频不缩小。4K 处理较慢，建议先预览。</p><button id="preview" disabled style="margin:18px 0 10px;background:#71836b">预览前 5 秒</button></div><button id="convert" disabled>选择视频以开始</button><p class="note">♧ 文件仅在本机处理，转换结束后自动清理临时文件</p><div id="status" class="status" role="status" aria-live="polite"></div><div id="result" hidden><div id="comparison" hidden><p class="label">原视频（可拖动进度条对照）</p><video id="original" controls playsinline></video><p class="label" id="resultLabel">增强结果</p><video id="videoPlayer" controls playsinline></video></div><audio id="player" controls hidden></audio><a id="download" class="download">下载 MP3 ↓</a></div></section>
+<section class="card" id="imageWorkspace" role="tabpanel" aria-labelledby="tab-image" hidden>
+<label class="drop" id="imageDrop"><input id="imageFiles" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple><div class="icon">▧</div><strong>拖入多张图片，或点击批量选择</strong><small>可多次追加 · JPG / PNG / WebP · 每张最大 30 MB · 最多 100 张</small></label>
+<div class="settings"><label class="label" for="imageFormat">输出格式<small>WebP 适合兼顾体积和透明背景</small></label><select id="imageFormat"><option value="webp">WebP · 推荐</option><option value="jpeg">JPG · 兼容性好</option><option value="png">PNG · 无损编码</option></select></div>
+<div class="settings"><label class="label" for="imageQuality">压缩质量 <span id="qualityValue">80%</span></label><input id="imageQuality" type="range" min="10" max="100" value="80" style="accent-color:#486c50;width:48%"></div>
+<div class="settings"><label class="label" for="imageMax">最长边尺寸<small>保持比例，不放大小图</small></label><select id="imageMax"><option value="0">保持原尺寸</option><option value="2560">最多 2560 px</option><option value="1920">最多 1920 px</option><option value="1280">最多 1280 px</option></select></div>
+<p class="note" id="imageHint">仅在浏览器内处理。JPG 的透明区域填为白色；动态 WebP 只保留静态画面。<br>质量越低体积通常越小；已压缩图片可能不会变小。</p>
+<div class="image-actions"><button id="imageCompress" disabled>开始批量压缩</button><button id="imageClear" class="secondary" disabled>清空列表</button></div>
+<div id="imageStatus" class="status" role="status" aria-live="polite">选择图片后开始，支持多次追加。</div>
+<progress id="imageProgress" value="0" max="1" hidden aria-label="图片压缩进度"></progress>
+<button id="imageZip" hidden style="margin-top:16px">打包下载 ZIP ↓</button>
+<div id="imageList" class="image-list"></div>
+</section>
+<div class="features"><span>↗ 无需注册</span><span>◎ 无需网络</span><span>◇ 隐私优先</span></div><footer>声屿 · 给声音一个轻盈的去处</footer></main>
+<script>
+const $=id=>document.getElementById(id);
+let selected=null,busy=false,ready=false,url=null,originalUrl=null,activeTool='enhance';
+const toolTabs=Array.from(document.querySelectorAll('[data-tool]'));
+const isVideo=()=>activeTool==='enhance';
+function message(text,error=false){$('status').textContent=text;$('status').className='status'+(error?' error':'')}
+function update(){ $('audioSettings').hidden=isVideo();$('videoSettings').hidden=!isVideo();$('convert').textContent=isVideo()?'增强完整视频 →':'提取音频 →';for(const id of ['convert','preview'])$(id).disabled=busy||!ready||!selected; }
+function clearResult(){for(const id of ['player','videoPlayer']){$(id).pause();$(id).removeAttribute('src');$(id).load()}if(url)URL.revokeObjectURL(url);url=null;$('result').hidden=true;}
+function choose(file){if(busy||!file)return;if(!/\.mp4$/i.test(file.name)){message('请选择 MP4 视频文件。',true);return}if(!file.size||file.size>2*1024**3){message('请选择非空且小于 2 GB 的文件。',true);return}clearResult();selected=file;$('filename').textContent=file.name;$('filemeta').textContent=(file.size/1024**2).toFixed(1)+' MB · 已准备好';$('original').pause();$('original').removeAttribute('src');if(originalUrl)URL.revokeObjectURL(originalUrl);originalUrl=URL.createObjectURL(file);$('original').src=originalUrl;update();if(ready)message('')}
+$('file').onchange=e=>choose(e.target.files[0]);
+function switchTool(tab){
+ if(busy)return;
+ activeTool=tab.dataset.tool;
+ toolTabs.forEach(item=>{const active=item===tab;item.setAttribute('aria-selected',String(active));item.tabIndex=active?0:-1;});
+ $('workspace').hidden=activeTool==='image';
+ $('imageWorkspace').hidden=activeTool!=='image';
+ if(activeTool!=='image')$('workspace').setAttribute('aria-labelledby',tab.id);
+ clearResult();if(ready)message('');update();
+}
+toolTabs.forEach((tab,index)=>{
+ tab.onclick=()=>switchTool(tab);
+ tab.onkeydown=e=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)||busy)return;
+  e.preventDefault();
+  const next=e.key==='Home'?0:e.key==='End'?toolTabs.length-1:(index+(e.key==='ArrowRight'?1:-1)+toolTabs.length)%toolTabs.length;
+  toolTabs[next].focus();switchTool(toolTabs[next]);
+ };
+});
+for(const id of ['preset','resolution','quality'])$(id).onchange=()=>clearResult();
+for(const type of ['dragenter','dragover'])$('drop').addEventListener(type,e=>{e.preventDefault();$('drop').classList.add('over')});
+for(const type of ['dragleave','drop'])$('drop').addEventListener(type,e=>{e.preventDefault();$('drop').classList.remove('over')});
+$('drop').addEventListener('drop',e=>choose(e.dataTransfer.files[0]));
+async function run(preview=false){
+ if(!selected||busy||!ready)return;
+ const video=isVideo();busy=true;clearResult();toolTabs.forEach(tab=>tab.disabled=true);
+ for(const id of ['file','quality','preset','resolution','convert','preview'])$(id).disabled=true;
+ $('convert').textContent='正在处理…';message(preview?'正在生成前 5 秒预览，完整原文件会在本机读取。':'正在本地处理完整视频，请保持页面打开。高分辨率视频可能需要较长时间。');
+ try{
+  const query=new URLSearchParams({bitrate:$('quality').value,preset:$('preset').value,resolution:$('resolution').value,preview:preview?'1':'0'});
+  const response=await fetch((video?'/api/enhance':'/api/convert')+'?'+query,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:selected});
+  if(!response.ok){const data=await response.json();throw Error(data.error)}
+  const blob=await response.blob();url=URL.createObjectURL(blob);
+  $('comparison').hidden=!video;$('player').hidden=video;
+  $(video?'videoPlayer':'player').src=url;
+  $('resultLabel').textContent=preview?'增强预览 · 前 5 秒':'增强结果 · 完整视频';
+  $('download').href=url;$('download').download=selected.name.replace(/\.mp4$/i,'')+(video?(preview?'_预览.mp4':'_增强.mp4'):'.mp3');
+  $('download').textContent=video?(preview?'下载 5 秒预览 ↓':'下载增强视频 ↓'):'下载 MP3 ↓';
+  $('result').hidden=false;message((preview?'预览已生成，确认效果后可点击“增强完整视频”。':'处理完成。')+' 文件大小 '+(blob.size/1024**2).toFixed(1)+' MB。');
+ }catch(e){message(e.message||'处理失败，请检查本地服务。',true)}
+ finally{busy=false;toolTabs.forEach(tab=>tab.disabled=false);for(const id of ['file','quality','preset','resolution'])$(id).disabled=false;update();}
+}
+$('convert').onclick=()=>run(false);$('preview').onclick=()=>run(true);
+fetch('/api/status').then(r=>r.json()).then(data=>{ready=data.ffmpeg;if(!ready)message('未检测到 FFmpeg，请检查工具的 bin 文件夹。',true);update()}).catch(()=>message('无法连接本地服务，请使用启动.command 打开工具。',true));
+update();
+</script>
+<script src="/image-tool.js"></script>
+</html>
