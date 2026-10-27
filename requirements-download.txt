@@ -1,0 +1,3 @@
+# Site extractors change frequently; setup.py --update-downloader updates these.
+yt-dlp[default]>=2026.10.26
+deno>=2.0

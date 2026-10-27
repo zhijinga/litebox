@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """A loopback-only audio converter. Requires Python 3 and FFmpeg."""
 import json
+import atexit
 import os
 import shutil
 import subprocess
@@ -8,7 +9,8 @@ import tempfile
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
+from download_tool import DownloadManager, available as download_available, deno_path
 
 ROOT = Path(__file__).resolve().parent
 MAX_BYTES = 2 * 1024**3
@@ -17,6 +19,10 @@ MAX_BYTES = 2 * 1024**3
 def ffmpeg_path():
     bundled = ROOT / 'bin' / ('ffmpeg.exe' if os.name == 'nt' else 'ffmpeg')
     return str(bundled) if bundled.is_file() else shutil.which('ffmpeg')
+
+
+downloads = DownloadManager(ffmpeg_path)
+atexit.register(downloads.close)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -28,13 +34,45 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def json_response(self, data, status=200):
+        content = json.dumps(data, ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(content)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(content)
+
     def do_GET(self):
+        if urlparse('http://' + self.headers.get('Host', '')).hostname not in ('127.0.0.1', 'localhost', '::1'):
+            return self.error(403, '仅支持本机访问')
         path = urlparse(self.path).path
+        if path.startswith('/api/video/job/'):
+            try:
+                return self.json_response(downloads.snapshot(path.rsplit('/', 1)[-1]))
+            except KeyError:
+                return self.error(404, '任务不存在或已过期')
+        if path.startswith('/api/video/file/'):
+            try:
+                file, name = downloads.file(path.rsplit('/', 1)[-1])
+                # Open before replying, so a missing/expired result gives a proper error.
+                source = file.open('rb')
+            except (KeyError, OSError):
+                return self.error(404, '下载文件不存在或已过期')
+            with source:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Length', str(file.stat().st_size))
+                self.send_header('Content-Disposition', "attachment; filename=video" + file.suffix + "; filename*=UTF-8''" + quote(name))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                shutil.copyfileobj(source, self.wfile)
+            return
         if path == '/api/status':
-            data = json.dumps({'ffmpeg': bool(ffmpeg_path())}).encode()
+            data = json.dumps({'ffmpeg': bool(ffmpeg_path()), 'video_download': download_available(), 'js_runtime': bool(deno_path())}).encode()
             mime = 'application/json'
-        elif path == '/image-tool.js':
-            data = (ROOT / 'image-tool.js').read_bytes()
+        elif path in ('/image-tool.js', '/video-download.js'):
+            data = (ROOT / path.lstrip('/')).read_bytes()
             mime = 'text/javascript; charset=utf-8'
         elif path == '/':
             data = (ROOT / 'index.html').read_bytes()
@@ -48,6 +86,30 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
+        if urlparse('http://' + self.headers.get('Host', '')).hostname not in ('127.0.0.1', 'localhost', '::1'):
+            return self.error(403, '仅支持本机访问')
+        if self.headers.get('Origin') not in (None, f'http://{self.headers.get("Host")}'):
+            return self.error(403, '不允许跨站请求')
+        if urlparse(self.path).path.startswith('/api/video/'):
+            try:
+                size = int(self.headers.get('Content-Length', '0'))
+                if not 0 < size <= 16384:
+                    return self.error(400, '请求大小无效')
+                data = json.loads(self.rfile.read(size))
+                if not isinstance(data, dict):
+                    return self.error(400, '请求内容无效')
+                action = urlparse(self.path).path
+                if action == '/api/video/analyze':
+                    return self.json_response(downloads.analyze(data.get('url'), data.get('proxy', '')))
+                if action == '/api/video/download':
+                    return self.json_response(downloads.start(str(data.get('id')), data.get('height')))
+                if action == '/api/video/remove':
+                    downloads.remove(str(data.get('id')))
+                    return self.json_response({'ok': True})
+                return self.error(404, '接口不存在')
+            except (ValueError, TypeError, KeyError):
+                import sys
+                return self.error(400, str(sys.exc_info()[1]).strip("'"))
         enhance = urlparse(self.path).path == '/api/enhance'
         if urlparse(self.path).path not in ('/api/convert', '/api/enhance'):
             return self.error(404, '接口不存在')
@@ -121,7 +183,7 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1', 8765), Handler)
-    print('本地 MP4 → MP3：http://127.0.0.1:8765（按 Ctrl+C 停止）')
+    print('LiteBox 本地媒体工具：http://127.0.0.1:8765（按 Ctrl+C 停止）')
     webbrowser.open('http://127.0.0.1:8765')
     try:
         server.serve_forever()

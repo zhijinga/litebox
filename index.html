@@ -17,7 +17,7 @@
 </style>
 <header><div class="brand"><span>◒</span>声屿</div><div class="badge">● 100% 本地处理</div></header>
 <main><div class="eyebrow">A LITTLE SPACE FOR SOUND</div><h1>让画面清楚，<span>让声音轻盈。</span></h1><p class="intro">增强视频、提取音频，批量压缩图片。<br>全程本地处理，原文件保持不变。</p>
-<nav class="tool-tabs" role="tablist" aria-label="本地音视频工具"><button type="button" id="tab-enhance" role="tab" aria-selected="true" aria-controls="workspace" data-tool="enhance">视频增强</button><button type="button" id="tab-audio" role="tab" aria-selected="false" aria-controls="workspace" tabindex="-1" data-tool="audio">MP4 转 MP3</button><button type="button" id="tab-image" role="tab" aria-selected="false" aria-controls="imageWorkspace" tabindex="-1" data-tool="image">图片压缩</button></nav>
+<nav class="tool-tabs" role="tablist" aria-label="本地音视频工具"><button type="button" id="tab-enhance" role="tab" aria-selected="true" aria-controls="workspace" data-tool="enhance">视频增强</button><button type="button" id="tab-audio" role="tab" aria-selected="false" aria-controls="workspace" tabindex="-1" data-tool="audio">MP4 转 MP3</button><button type="button" id="tab-image" role="tab" aria-selected="false" aria-controls="imageWorkspace" tabindex="-1" data-tool="image">图片压缩</button><button type="button" id="tab-download" role="tab" aria-selected="false" aria-controls="downloadWorkspace" tabindex="-1" data-tool="download">视频下载</button></nav>
 <section class="card" id="workspace" role="tabpanel" aria-labelledby="tab-enhance"><label class="drop" id="drop"><input id="file" type="file" accept=".mp4,video/mp4"><div class="icon">♫</div><strong id="filename">拖入视频，或点击选择文件</strong><small id="filemeta">支持 MP4 格式 · 最大 2 GB · 每次一个文件</small></label>
 <div id="audioSettings" class="settings" hidden><div class="label">音频质量<small>根据用途，选择适合的音质</small></div><select id="quality" aria-label="音频质量"><option value="192">192 kbps · 推荐</option><option value="320">320 kbps · 高音质</option><option value="128">128 kbps · 小体积</option></select></div>
 <div id="videoSettings"><div class="settings"><label class="label" for="preset">增强预设</label><select id="preset"><option value="gentle">轻度增强 · 日常视频</option><option value="lowlight">暗光降噪 · 提亮画面</option><option value="animation">动画放大 · 线条增强</option></select></div><div class="settings"><label class="label" for="resolution">输出分辨率</label><select id="resolution"><option value="original">保持原尺寸</option><option value="1080">放大至 1080p</option><option value="2160">放大至 4K</option></select></div><p class="note">基础降噪与锐化，非 AI 修复；放大不会恢复已丢失的细节。<br>竖屏保持竖屏比例，较大视频不缩小。4K 处理较慢，建议先预览。</p><button id="preview" disabled style="margin:18px 0 10px;background:#71836b">预览前 5 秒</button></div><button id="convert" disabled>选择视频以开始</button><p class="note">♧ 文件仅在本机处理，转换结束后自动清理临时文件</p><div id="status" class="status" role="status" aria-live="polite"></div><div id="result" hidden><div id="comparison" hidden><p class="label">原视频（可拖动进度条对照）</p><video id="original" controls playsinline></video><p class="label" id="resultLabel">增强结果</p><video id="videoPlayer" controls playsinline></video></div><audio id="player" controls hidden></audio><a id="download" class="download">下载 MP3 ↓</a></div></section>
@@ -32,6 +32,16 @@
 <progress id="imageProgress" value="0" max="1" hidden aria-label="图片压缩进度"></progress>
 <button id="imageZip" hidden style="margin-top:16px">打包下载 ZIP ↓</button>
 <div id="imageList" class="image-list"></div>
+</section>
+<section class="card" id="downloadWorkspace" role="tabpanel" aria-labelledby="tab-download" hidden>
+<div class="label" style="font-size:18px;font-weight:600">把视频保存到本机</div><p class="intro">粘贴单个视频链接，读取当前可下载的清晰度。支持 Bilibili、YouTube（含短链接和 Shorts）。</p>
+<label class="label" for="videoUrl">视频网址</label><input id="videoUrl" type="url" placeholder="https://www.bilibili.com/video/… 或 https://youtu.be/…" autocomplete="off" style="display:block;width:100%;margin:10px 0 18px;padding:14px;border:1px solid #dfe5d9;border-radius:10px;font:inherit;font-size:13px">
+<details style="margin-bottom:20px"><summary class="label" style="cursor:pointer;color:#788371">网络代理（可选）</summary><label class="label" for="videoProxy" style="display:block;margin:12px 0 8px">代理地址</label><input id="videoProxy" type="text" placeholder="http://127.0.0.1:7890" autocomplete="off" style="width:100%;padding:12px;border:1px solid #dfe5d9;border-radius:9px"><p class="note">仅本次任务使用，不保存账号或浏览器登录信息。</p></details>
+<button id="videoAnalyze">读取视频信息</button>
+<div id="videoDownloadStatus" class="status" role="status" aria-live="polite">粘贴网址后开始。</div><progress id="videoDownloadProgress" max="100" value="0" hidden aria-label="视频下载进度"></progress>
+<div id="videoDetails" hidden><p id="videoTitle" style="font-weight:600;line-height:1.7;overflow-wrap:anywhere"></p><p id="videoMeta" class="note" style="text-align:left"></p><div class="settings"><label class="label" for="videoResolution">可用分辨率</label><select id="videoResolution"></select></div><button id="videoDownloadStart">下载所选清晰度</button></div>
+<a id="videoSave" class="download" hidden>保存视频到电脑 ↓</a><button id="videoRemove" class="secondary" hidden style="margin-top:12px">清理任务文件</button>
+<p class="note">优先合并为 MP4，不兼容时保存为 MKV。清晰度取决于平台实际返回结果。<br>暂不支持合集、直播、需要登录的视频；结果保留 2 小时，请及时保存。</p>
 </section>
 <div class="features"><span>↗ 无需注册</span><span>◎ 无需网络</span><span>◇ 隐私优先</span></div><footer>声屿 · 给声音一个轻盈的去处</footer></main>
 <script>
@@ -48,9 +58,10 @@ function switchTool(tab){
  if(busy)return;
  activeTool=tab.dataset.tool;
  toolTabs.forEach(item=>{const active=item===tab;item.setAttribute('aria-selected',String(active));item.tabIndex=active?0:-1;});
- $('workspace').hidden=activeTool==='image';
+ $('workspace').hidden=!['enhance','audio'].includes(activeTool);
+ $('downloadWorkspace').hidden=activeTool!=='download';
  $('imageWorkspace').hidden=activeTool!=='image';
- if(activeTool!=='image')$('workspace').setAttribute('aria-labelledby',tab.id);
+ if(['enhance','audio'].includes(activeTool))$('workspace').setAttribute('aria-labelledby',tab.id);
  clearResult();if(ready)message('');update();
 }
 toolTabs.forEach((tab,index)=>{
@@ -90,4 +101,5 @@ fetch('/api/status').then(r=>r.json()).then(data=>{ready=data.ffmpeg;if(!ready)m
 update();
 </script>
 <script src="/image-tool.js"></script>
+<script src="/video-download.js"></script>
 </html>

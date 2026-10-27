@@ -124,16 +124,48 @@ def install(proxy=None, check=False):
     print('安装完成，MP3 / H.264 编码验证通过。')
 
 
+def install_downloader(proxy=None, check=False, upgrade=False):
+    vendor = ROOT / '.vendor'
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join((str(vendor), str(ROOT))))
+    probe_code = ('import yt_dlp, yt_dlp_ejs, download_tool; import subprocess; '
+                  'runtime = download_tool.deno_path(); assert runtime; '
+                  'subprocess.run([runtime, "--version"], check=True, capture_output=True)')
+    probe = subprocess.run([sys.executable, '-c',
+                            probe_code],
+                           env=env, capture_output=True, timeout=30)
+    if probe.returncode == 0 and not upgrade:
+        print('视频下载组件已就绪。')
+        return
+    if check:
+        print('提示：视频下载组件未就绪，运行安装脚本后重启可启用；其他工具仍可使用。')
+        return
+    print('正在安装视频下载组件（yt-dlp / Deno），首次下载需要联网…', flush=True)
+    pip = subprocess.run([sys.executable, '-m', 'pip', '--version'], capture_output=True)
+    if pip.returncode:
+        subprocess.run([sys.executable, '-m', 'ensurepip', '--upgrade'], check=True)
+    command = [sys.executable, '-m', 'pip', 'install', '--upgrade', '--only-binary=:all:',
+               '--target', str(vendor), '--disable-pip-version-check', '--no-warn-script-location',
+               '-r', str(ROOT / 'requirements-download.txt')]
+    if proxy:
+        command += ['--proxy', proxy]
+    subprocess.run(command, check=True)
+    if subprocess.run([sys.executable, '-c', probe_code], env=env).returncode:
+        raise RuntimeError('下载组件验证失败，请检查 Python 版本和平台。')
+    print('视频下载组件安装完成。')
+
+
 def main():
     parser = argparse.ArgumentParser(description='安装本地媒体工具所需的 FFmpeg')
     parser.add_argument('--check', action='store_true', help='仅检查环境，不下载')
     parser.add_argument('--proxy', help='下载代理，如 http://127.0.0.1:7890')
+    parser.add_argument('--update-downloader', action='store_true', help='更新视频下载组件以适应平台变化')
     args = parser.parse_args()
-    if sys.version_info < (3, 9):
-        print('需要 Python 3.9 或更高版本。', file=sys.stderr)
+    if sys.version_info < (3, 11):
+        print('需要 Python 3.11 或更高版本。', file=sys.stderr)
         return 1
     try:
         install(args.proxy, args.check)
+        install_downloader(args.proxy, args.check, args.update_downloader)
     except Exception as error:
         print('安装未完成：' + str(error), file=sys.stderr)
         print('请确认网络可访问 PyPI；使用代理时可运行：python setup.py --proxy http://127.0.0.1:端口', file=sys.stderr)

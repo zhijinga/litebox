@@ -1,6 +1,6 @@
 #!/bin/zsh
 cd -- "$(dirname -- "$0")"
-if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)' >/dev/null 2>&1; then
+if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     echo '正在通过 Homebrew 安装 Python…'
     brew install python || { read -r '?安装失败，按回车退出…'; exit 1; }
